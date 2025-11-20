@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Multi-Car Realtime Tracking</title>
+<style>
+  html, body {margin:0; height:100%; font-family:Arial;}
+  #map {height:100vh; width:100%;}
+  #sidebar {
+    position:absolute; top:10px; left:10px; z-index:5;
+    background:#fff; padding:10px; border-radius:8px;
+    max-height:80vh; overflow-y:auto;
+    box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  .car-item {margin-bottom:6px; font-size:14px; cursor:pointer;}
+  .car-color {
+    display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+<div id="sidebar"><b>Cars:</b><div id="carList"></div></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+/* ---------------- USER CONFIG ---------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlkvwyaF6FPPbXBJDqHwuTS5S3QKG3l8",
+  authDomain: "xoxo-store.firebaseapp.com",
+  databaseURL: "https://xoxo-store-default-rtdb.firebaseio.com",
+  projectId: "xoxo-store",
+  storageBucket: "xoxo-store.firebasestorage.app",
+  messagingSenderId: "667290233046",
+  appId: "1:667290233046:web:dbbc9130ff38b0900f8177",
+  measurementId: "G-XMJVCK8KMD"
+};
+
+const ROOT_PATH = "/cars";
+/* ------------------------------------------------*/
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let map;
+let cars = {};
+
+// random color
+function randomColor() {
+  return "#" + Math.floor(Math.random() * 16777215).toString(16);
+}
+
+// SVG car with heading
+function carSVG(angle=0, size=40, color="#1976D2") {
+  const svg = `
+    <svg width="${size}" height="${size}" viewBox="0 0 64 64" 
+      xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(32,32) rotate(${angle}) translate(-32,-32)">
+        <rect x="10" y="20" rx="4" ry="4" width="44" height="20"
+              fill="${color}" stroke="#000" stroke-width="1"/>
+        <circle cx="20" cy="44" r="4" fill="#111"/>
+        <circle cx="44" cy="44" r="4" fill="#111"/>
+      </g>
+    </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function initMap() {
+  // Default center in case geolocation fails
+  const defaultCenter = {lat:39.8, lng:-98.5};
+
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: defaultCenter,
+    zoom: 10
+  });
+
+  // Try to get browser location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const myLoc = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+        map.setCenter(myLoc);
+        map.setZoom(8);
+
+        // Optional: add marker for your location
+        new google.maps.Marker({
+          position: myLoc,
+          map,
+          title: "You are here",
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#FF0000",
+            fillOpacity: 0.8,
+            strokeWeight: 2,
+            strokeColor: "#fff"
+          }
+        });
+      },
+      err => {
+        console.warn("Geolocation failed, using default center");
+      }
+    );
+  }
+
+  listenCars();
+}
+
+function listenCars() {
+  const rootRef = db.ref(ROOT_PATH);
+
+  rootRef.on("child_added", snap => {
+    const carId = snap.key;
+    setupCar(carId);
+  });
+}
+
+function setupCar(carId) {
+  const color = randomColor();
+  const carRef = db.ref(`${ROOT_PATH}/${carId}/points`);
+
+  cars[carId] = {
+    color,
+    lastPoint: null,
+    marker: new google.maps.Marker({
+      map,
+      title: carId,
+      icon: carSVG(0, 46, color),
+      optimized: false
+    })
+  };
+
+  // Sidebar
+  const div = document.getElementById("carList");
+  const item = document.createElement("div");
+  item.className = "car-item";
+  item.id = "car-" + carId;
+  item.innerHTML = `
+    <span class="car-color" style="background:${color}"></span>
+    ${carId}
+  `;
+  item.onclick = () => {
+    if (cars[carId].lastPoint) {
+      map.panTo(cars[carId].lastPoint);
+      map.setZoom(17);
+    }
+  };
+  div.appendChild(item);
+
+  carRef.on("value", snap => {
+    const v = snap.val();
+    if (!v || typeof v.lat === "undefined" || typeof v.lng === "undefined") return;
+
+    const pos = {
+      lat: Number(v.lat),
+      lng: Number(v.lng)
+    };
+
+    updateCar(carId, pos);
+  });
+}
+
+function updateCar(carId, pos) {
+  const car = cars[carId];
+
+  // compute heading
+  let heading = 0;
+  if (car.lastPoint && google.maps.geometry) {
+    const prev = new google.maps.LatLng(car.lastPoint.lat, car.lastPoint.lng);
+    const now  = new google.maps.LatLng(pos.lat, pos.lng);
+
+    heading = google.maps.geometry.spherical.computeHeading(prev, now);
+  }
+
+  car.lastPoint = pos;
+
+  car.marker.setPosition(pos);
+  car.marker.setIcon({
+    url: carSVG(heading, 46, car.color),
+    scaledSize: new google.maps.Size(46,46),
+    anchor: new google.maps.Point(23,23)
+  });
+}
+
+window.initMap = initMap;
+</script>
+
+<!-- Google Maps -->
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjdnkFWOnh1u2cWf5RFURytU8Zk3fmOhk&libraries=geometry&callback=initMap">
+</script>
+<!-- Add inside <body>, just after #map div -->
+<div id="bottomButton">
+  <button onclick="goToParameters()">⚙️ Parameters</button>
+</div>
+
+<style>
+  #bottomButton {
+    position: absolute;
+    bottom: 20px; /* distance from bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  #bottomButton button {
+    background-color: #1976D2;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.2s;
+  }
+  #bottomButton button:hover {
+    background-color: #115293;
+    transform: scale(1.05);
+  }
+</style>
+
+<script>
+function goToParameters() {
+  window.location.href = "parameters.html"; // your parameters page
+}
+</script>
+
+
+</body>
+</html>
