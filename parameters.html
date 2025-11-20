@@ -114,13 +114,13 @@ function loadCarsList() {
     }
   });
 }
-
 /* ----------- VERIFY ADMIN CODE ----------- */
 function verifyAdminCode(callback) {
   const code = prompt("Enter Admin Code:");
   if (!code) return alert("Admin code is required!");
 
-  db.ref(`${ROOT_PATH}/AdminCode`).once("value").then(snapshot => {
+  // New path: AdminCode/cars
+  db.ref(`AdminCode/cars`).once("value").then(snapshot => {
     const storedCode = snapshot.val();
     if (code === storedCode) {
       callback();
@@ -129,6 +129,7 @@ function verifyAdminCode(callback) {
     }
   }).catch(err => alert("Error verifying code: " + err));
 }
+
 
 /* ----------- SEND DATE FOR SELECTED CAR ----------- */
 function sendDateForCar() {
