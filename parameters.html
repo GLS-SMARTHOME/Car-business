@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Car Date Parameters</title>
+<title>Car Date & Commands</title>
 <style>
   body { font-family: Arial; margin:0; padding:20px; background:#f5f5f5; }
   h1 { color:#1976D2; margin-bottom:20px; }
@@ -17,7 +17,7 @@
   #status-list { background:#fff; padding:15px 20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
   #status-list h2 { margin-top:0; color:#1976D2; font-size:18px; }
   #status-list ul { list-style:none; padding:0; margin:0; }
-  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; }
+  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
   #status-list li:last-child { border-bottom:none; }
   #status-list li span { min-width:80px; text-align:center; }
 </style>
@@ -43,6 +43,23 @@
   <ul id="cars-status-ul"></ul>
 </div>
 
+<div class="param-section">
+  <h2>Send Command</h2>
+  <label for="car-command-select">Select Car</label>
+  <select id="car-command-select">
+    <option value="">-- Select Car --</option>
+  </select>
+
+  <label for="car-command-option">Select Option</label>
+  <select id="car-command-option">
+    <option value="">-- Select Option --</option>
+    <option value="lock">Lock</option>
+    <option value="unlock">Unlock</option>
+  </select>
+
+  <button onclick="sendCarCommand()">Send Command</button>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -64,6 +81,7 @@ const ROOT_PATH = "/cars";
 
 /* ----------- LOAD CAR LIST ----------- */
 const carSelect = document.getElementById("car-select");
+const carCommandSelect = document.getElementById("car-command-select");
 const statusUl = document.getElementById("cars-status-ul");
 
 function loadCarsList() {
@@ -72,16 +90,19 @@ function loadCarsList() {
     if (!cars) return;
 
     carSelect.innerHTML = '<option value="">-- Select Car --</option>';
+    carCommandSelect.innerHTML = '<option value="">-- Select Car --</option>';
     statusUl.innerHTML = '';
 
     for (let carId in cars) {
       const car = cars[carId];
 
-      // Populate select dropdown
-      const option = document.createElement("option");
-      option.value = carId;
-      option.textContent = carId;
-      carSelect.appendChild(option);
+      // Populate dropdowns
+      [carSelect, carCommandSelect].forEach(select => {
+        const option = document.createElement("option");
+        option.value = carId;
+        option.textContent = carId;
+        select.appendChild(option);
+      });
 
       // Populate status list
       const li = document.createElement("li");
@@ -107,6 +128,19 @@ function sendDateForCar() {
     .catch(err => alert("Error sending date: " + err));
 }
 
+/* ----------- SEND CAR COMMAND ----------- */
+function sendCarCommand() {
+  const carId = carCommandSelect.value;
+  const option = document.getElementById("car-command-option").value;
+
+  if (!carId) return alert("Please select a car!");
+  if (!option) return alert("Please select an option!");
+
+  // Updated path: cars/<carId>/req
+  db.ref(`${ROOT_PATH}/${carId}/req`).set(option)
+    .then(() => alert(`Command "${option}" sent for ${carId}`))
+    .catch(err => alert("Error sending command: " + err));
+}
 /* ----------- LISTEN FOR STATUS & AVAILABLEON CHANGES ----------- */
 db.ref(ROOT_PATH).on("child_changed", snapshot => {
   const carId = snapshot.key;
