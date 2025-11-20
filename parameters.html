@@ -17,9 +17,19 @@
   #status-list { background:#fff; padding:15px 20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
   #status-list h2 { margin-top:0; color:#1976D2; font-size:18px; }
   #status-list ul { list-style:none; padding:0; margin:0; }
-  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; transition: background 0.3s; }
   #status-list li:last-child { border-bottom:none; }
   #status-list li span { min-width:80px; text-align:center; }
+
+  /* blinking green for expired date */
+  .expired {
+    animation: blink-green 1s infinite;
+  }
+  @keyframes blink-green {
+    0% { background-color: #ccffcc; }   /* light green */
+    50% { background-color: #fff; }
+    100% { background-color: #ccffcc; }
+  }
 </style>
 </head>
 <body>
@@ -42,7 +52,7 @@
   <h2>Cars Status & Availability</h2>
   <ul id="cars-status-ul"></ul>
 </div>
-
+<br>
 <div class="param-section">
   <h2>Send Command</h2>
   <label for="car-command-select">Select Car</label>
@@ -60,11 +70,9 @@
   <button onclick="sendCarCommand()">Send Command</button>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
-/* ---------------- CONFIG ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyAIlkvwyaF6FPPbXBJDqHwuTS5S3QKG3l8",
   authDomain: "xoxo-store.firebaseapp.com",
@@ -79,7 +87,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const ROOT_PATH = "/cars";
 
-/* ----------- LOAD CAR LIST ----------- */
 const carSelect = document.getElementById("car-select");
 const carCommandSelect = document.getElementById("car-command-select");
 const statusUl = document.getElementById("cars-status-ul");
@@ -96,7 +103,6 @@ function loadCarsList() {
     for (let carId in cars) {
       const car = cars[carId];
 
-      // Populate dropdowns
       [carSelect, carCommandSelect].forEach(select => {
         const option = document.createElement("option");
         option.value = carId;
@@ -104,22 +110,22 @@ function loadCarsList() {
         select.appendChild(option);
       });
 
-      // Populate status list
       const li = document.createElement("li");
       li.id = `status-${carId}`;
       const status = car.status || "Unknown";
       const availableOn = car.AvailableOn || "N/A";
       li.innerHTML = `<span>${carId}</span><span>${status}</span><span>${availableOn}</span>`;
       statusUl.appendChild(li);
+
+      checkExpired(li, availableOn);
     }
   });
 }
-/* ----------- VERIFY ADMIN CODE ----------- */
+
 function verifyAdminCode(callback) {
   const code = prompt("Enter Admin Code:");
   if (!code) return alert("Admin code is required!");
 
-  // New path: AdminCode/cars
   db.ref(`AdminCode/cars`).once("value").then(snapshot => {
     const storedCode = snapshot.val();
     if (code === storedCode) {
@@ -130,12 +136,9 @@ function verifyAdminCode(callback) {
   }).catch(err => alert("Error verifying code: " + err));
 }
 
-
-/* ----------- SEND DATE FOR SELECTED CAR ----------- */
 function sendDateForCar() {
   const carId = carSelect.value;
   const date = document.getElementById("date-picker").value;
-
   if (!carId) return alert("Please select a car!");
   if (!date) return alert("Please select a date!");
 
@@ -146,11 +149,9 @@ function sendDateForCar() {
   });
 }
 
-/* ----------- SEND CAR COMMAND ----------- */
 function sendCarCommand() {
   const carId = carCommandSelect.value;
   const option = document.getElementById("car-command-option").value;
-
   if (!carId) return alert("Please select a car!");
   if (!option) return alert("Please select an option!");
 
@@ -161,7 +162,17 @@ function sendCarCommand() {
   });
 }
 
-/* ----------- LISTEN FOR STATUS & AVAILABLEON CHANGES ----------- */
+function checkExpired(liElement, availableOn) {
+  liElement.classList.remove("expired");
+  if (!availableOn || availableOn === "N/A") return;
+
+  const today = new Date();
+  const carDate = new Date(availableOn + "T23:59:59");
+  if (carDate < today) {
+    liElement.classList.add("expired");
+  }
+}
+
 db.ref(ROOT_PATH).on("child_changed", snapshot => {
   const carId = snapshot.key;
   const car = snapshot.val();
@@ -171,13 +182,13 @@ db.ref(ROOT_PATH).on("child_changed", snapshot => {
     const availableOn = car.AvailableOn || "N/A";
     li.querySelector("span:nth-child(2)").textContent = status;
     li.querySelector("span:nth-child(3)").textContent = availableOn;
+
+    checkExpired(li, availableOn);
   }
 });
 
-// Initial load
 loadCarsList();
 </script>
-
 
 </body>
 </html>
