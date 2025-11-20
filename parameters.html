@@ -2,127 +2,127 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parameters</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Car Date Parameters</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-  }
-  h1 {
-    color: #1976D2;
-  }
-  .param-section {
-    background: #fff;
-    padding: 15px 20px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: bold;
-  }
-  input, select {
-    width: 100%;
-    padding: 8px 10px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-  }
-  button {
-    background-color: #1976D2;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  button:hover {
-    background-color: #115293;
-  }
+  body { font-family: Arial; margin:0; padding:20px; background:#f5f5f5; }
+  h1 { color:#1976D2; margin-bottom:20px; }
+  .param-section { background:#fff; padding:15px 20px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  label { display:block; margin-bottom:6px; font-weight:bold; }
+  select, input, button { width:100%; padding:8px 10px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+  button { background:#1976D2; color:#fff; border:none; cursor:pointer; transition: background 0.3s; }
+  button:hover { background:#115293; }
+
+  /* Status list */
+  #status-list { background:#fff; padding:15px 20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  #status-list h2 { margin-top:0; color:#1976D2; font-size:18px; }
+  #status-list ul { list-style:none; padding:0; margin:0; }
+  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; }
+  #status-list li:last-child { border-bottom:none; }
+  #status-list li span { min-width:80px; text-align:center; }
 </style>
 </head>
 <body>
 
-<h1>Parameters</h1>
+<h1>Send Date for Car</h1>
 
 <div class="param-section">
-  <label for="update-interval">Update Interval (seconds)</label>
-  <input type="number" id="update-interval" value="5">
-</div>
-
-<div class="param-section">
-  <label for="map-zoom">Default Map Zoom</label>
-  <select id="map-zoom">
-    <option value="5">5</option>
-    <option value="8" selected>8</option>
-    <option value="10">10</option>
-    <option value="12">12</option>
-    <option value="15">15</option>
+  <label for="car-select">Select Car</label>
+  <select id="car-select">
+    <option value="">-- Select Car --</option>
   </select>
+
+  <label for="date-picker">Select Date</label>
+  <input type="date" id="date-picker">
+
+  <button onclick="sendDateForCar()">Send Date</button>
 </div>
 
-<div class="param-section">
-  <label for="show-sidebar">Show Sidebar</label>
-  <select id="show-sidebar">
-    <option value="yes" selected>Yes</option>
-    <option value="no">No</option>
-  </select>
+<div id="status-list">
+  <h2>Cars Status & Availability</h2>
+  <ul id="cars-status-ul"></ul>
 </div>
 
-<button onclick="saveParameters()">Save</button>
-
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
-function saveParameters() {
-  const interval = document.getElementById('update-interval').value;
-  const zoom = document.getElementById('map-zoom').value;
-  const sidebar = document.getElementById('show-sidebar').value;
+/* ---------------- CONFIG ---------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlkvwyaF6FPPbXBJDqHwuTS5S3QKG3l8",
+  authDomain: "xoxo-store.firebaseapp.com",
+  databaseURL: "https://xoxo-store-default-rtdb.firebaseio.com",
+  projectId: "xoxo-store",
+  storageBucket: "xoxo-store.firebasestorage.app",
+  messagingSenderId: "667290233046",
+  appId: "1:667290233046:web:dbbc9130ff38b0900f8177",
+  measurementId: "G-XMJVCK8KMD"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT_PATH = "/cars";
 
-  // For now, just alert. Later you can save to localStorage or Firebase
-  alert(`Saved parameters:\nUpdate Interval: ${interval}s\nMap Zoom: ${zoom}\nShow Sidebar: ${sidebar}`);
+/* ----------- LOAD CAR LIST ----------- */
+const carSelect = document.getElementById("car-select");
+const statusUl = document.getElementById("cars-status-ul");
+
+function loadCarsList() {
+  db.ref(ROOT_PATH).once("value").then(snapshot => {
+    const cars = snapshot.val();
+    if (!cars) return;
+
+    carSelect.innerHTML = '<option value="">-- Select Car --</option>';
+    statusUl.innerHTML = '';
+
+    for (let carId in cars) {
+      const car = cars[carId];
+
+      // Populate select dropdown
+      const option = document.createElement("option");
+      option.value = carId;
+      option.textContent = carId;
+      carSelect.appendChild(option);
+
+      // Populate status list
+      const li = document.createElement("li");
+      li.id = `status-${carId}`;
+      const status = car.status || "Unknown";
+      const availableOn = car.AvailableOn || "N/A";
+      li.innerHTML = `<span>${carId}</span><span>${status}</span><span>${availableOn}</span>`;
+      statusUl.appendChild(li);
+    }
+  });
 }
+
+/* ----------- SEND DATE FOR SELECTED CAR ----------- */
+function sendDateForCar() {
+  const carId = carSelect.value;
+  const date = document.getElementById("date-picker").value;
+
+  if (!carId) return alert("Please select a car!");
+  if (!date) return alert("Please select a date!");
+
+  db.ref(`${ROOT_PATH}/${carId}/AvailableOn`).set(date)
+    .then(() => alert(`Date ${date} sent for ${carId}`))
+    .catch(err => alert("Error sending date: " + err));
+}
+
+/* ----------- LISTEN FOR STATUS & AVAILABLEON CHANGES ----------- */
+db.ref(ROOT_PATH).on("child_changed", snapshot => {
+  const carId = snapshot.key;
+  const car = snapshot.val();
+  const li = document.getElementById(`status-${carId}`);
+  if (li) {
+    const status = car.status || "Unknown";
+    const availableOn = car.AvailableOn || "N/A";
+    li.querySelector("span:nth-child(2)").textContent = status;
+    li.querySelector("span:nth-child(3)").textContent = availableOn;
+  }
+});
+
+// Initial load
+loadCarsList();
 </script>
 
-  <!-- Add inside <body>, just after #map div -->
-<div id="bottomButton">
-  <button onclick="goToCarsLocation()">Cars Tracking</button>
-</div>
-
-<style>
-  #bottomButton {
-    position: absolute;
-    bottom: 20px; /* distance from bottom */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-  }
-  #bottomButton button {
-    background-color: #1976D2;
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    transition: background 0.3s, transform 0.2s;
-  }
-  #bottomButton button:hover {
-    background-color: #115293;
-    transform: scale(1.05);
-  }
-</style>
-
-<script>
-function goToCarsLocation() {
-  window.location.href = "Tracking.html"; // your parameters page
-}
-</script>
 </body>
 </html>
