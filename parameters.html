@@ -89,5 +89,40 @@ function saveParameters() {
 }
 </script>
 
+  <!-- Add inside <body>, just after #map div -->
+<div id="bottomButton">
+  <button onclick="goToCarsLocation()">Cars Tracking</button>
+</div>
+
+<style>
+  #bottomButton {
+    position: absolute;
+    bottom: 20px; /* distance from bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  #bottomButton button {
+    background-color: #1976D2;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.2s;
+  }
+  #bottomButton button:hover {
+    background-color: #115293;
+    transform: scale(1.05);
+  }
+</style>
+
+<script>
+function goToCarsLocation() {
+  window.location.href = "Tracking.html"; // your parameters page
+}
+</script>
 </body>
 </html>
