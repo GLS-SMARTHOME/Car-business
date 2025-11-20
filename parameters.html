@@ -24,7 +24,7 @@
 </head>
 <body>
 
-<h1>Send Date for Car</h1>
+<h1>Update Date for Car</h1>
 
 <div class="param-section">
   <label for="car-select">Select Car</label>
@@ -115,6 +115,21 @@ function loadCarsList() {
   });
 }
 
+/* ----------- VERIFY ADMIN CODE ----------- */
+function verifyAdminCode(callback) {
+  const code = prompt("Enter Admin Code:");
+  if (!code) return alert("Admin code is required!");
+
+  db.ref(`${ROOT_PATH}/AdminCode`).once("value").then(snapshot => {
+    const storedCode = snapshot.val();
+    if (code === storedCode) {
+      callback();
+    } else {
+      alert("Invalid Admin Code!");
+    }
+  }).catch(err => alert("Error verifying code: " + err));
+}
+
 /* ----------- SEND DATE FOR SELECTED CAR ----------- */
 function sendDateForCar() {
   const carId = carSelect.value;
@@ -123,9 +138,11 @@ function sendDateForCar() {
   if (!carId) return alert("Please select a car!");
   if (!date) return alert("Please select a date!");
 
-  db.ref(`${ROOT_PATH}/${carId}/AvailableOn`).set(date)
-    .then(() => alert(`Date ${date} sent for ${carId}`))
-    .catch(err => alert("Error sending date: " + err));
+  verifyAdminCode(() => {
+    db.ref(`${ROOT_PATH}/${carId}/AvailableOn`).set(date)
+      .then(() => alert(`Date ${date} sent for ${carId}`))
+      .catch(err => alert("Error sending date: " + err));
+  });
 }
 
 /* ----------- SEND CAR COMMAND ----------- */
@@ -136,11 +153,13 @@ function sendCarCommand() {
   if (!carId) return alert("Please select a car!");
   if (!option) return alert("Please select an option!");
 
-  // Updated path: cars/<carId>/req
-  db.ref(`${ROOT_PATH}/${carId}/req`).set(option)
-    .then(() => alert(`Command "${option}" sent for ${carId}`))
-    .catch(err => alert("Error sending command: " + err));
+  verifyAdminCode(() => {
+    db.ref(`${ROOT_PATH}/${carId}/req`).set(option)
+      .then(() => alert(`Command "${option}" sent for ${carId}`))
+      .catch(err => alert("Error sending command: " + err));
+  });
 }
+
 /* ----------- LISTEN FOR STATUS & AVAILABLEON CHANGES ----------- */
 db.ref(ROOT_PATH).on("child_changed", snapshot => {
   const carId = snapshot.key;
@@ -157,6 +176,7 @@ db.ref(ROOT_PATH).on("child_changed", snapshot => {
 // Initial load
 loadCarsList();
 </script>
+
 
 </body>
 </html>
