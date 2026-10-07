@@ -1,231 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Car Date & Commands</title>
-<style>
-  body { font-family: Arial; margin:0; padding:20px; background:#f5f5f5; }
-  h1 { color:#1976D2; margin-bottom:20px; }
-  .param-section { background:#fff; padding:15px 20px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
-  label { display:block; margin-bottom:6px; font-weight:bold; }
-  select, input, button { width:100%; padding:8px 10px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
-  button { background:#1976D2; color:#fff; border:none; cursor:pointer; transition: background 0.3s; }
-  button:hover { background:#115293; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanic Shop Services & Pricing | DUMAK</title>
+    <style>
+        :root {
+            --primary-color: #1a252f;
+            --accent-color: #f1c40f;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
 
-  /* Status list */
-  #status-list { background:#fff; padding:15px 20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
-  #status-list h2 { margin-top:0; color:#1976D2; font-size:18px; }
-  #status-list ul { list-style:none; padding:0; margin:0; }
-  #status-list li { padding:8px 10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; transition: background 0.3s; }
-  #status-list li:last-child { border-bottom:none; }
-  #status-list li span { min-width:80px; text-align:center; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  /* blinking green for expired date */
-  .expired {
-    animation: blink-green 1s infinite;
-  }
-  @keyframes blink-green {
-    0% { background-color: #ccffcc; }   /* light green */
-    50% { background-color: #fff; }
-    100% { background-color: #ccffcc; }
-  }
-</style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: #fff;
+            text-align: center;
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #bdc3c7;
+        }
+
+        .back-nav {
+            max-width: 1000px;
+            margin: 2rem auto 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 1rem auto 4rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+        }
+
+        /* Pricing Table Container */
+        .pricing-wrapper {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border-top: 5px solid var(--accent-color);
+            margin-bottom: 2.5rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #fcfcfd;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #fdfdfd;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .service-icon {
+            font-size: 1.3rem;
+        }
+
+        .service-desc {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .price-tag {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #2e7d32;
+            white-space: nowrap;
+        }
+
+        .estimated-time {
+            color: #64748b;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        /* Call To Action Panel */
+        .cta-box {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .cta-box h2 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+
+        .cta-box p {
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #1a252f;
+            padding: 0.9rem 2.5rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            opacity: 0.95;
+        }
+
+        /* Floating WhatsApp Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            background-color: #25D366;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 999;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        
+        .whatsapp-float:hover { 
+            background-color: #20b358; 
+            transform: scale(1.05);
+        }
+
+        .whatsapp-float svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: #7f8c8d;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            margin-top: auto;
+            border-top: 1px solid #2c3e50;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Update Date for Car</h1>
+    <header class="header">
+        <h1>DUMAK MECHANIC SHOP</h1>
+        <p>Transparent Pricing & Premium Automotive Care</p>
+    </header>
 
-<div class="param-section">
-  <label for="car-select">Select Car</label>
-  <select id="car-select">
-    <option value="">-- Select Car --</option>
-  </select>
+    <nav class="back-nav">
+        <!-- Direct relative link pointing back to your main menu portal -->
+        <a href="/" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://w3.org" style="vertical-align: middle;">
+                <path d="M10 12L4 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Main Menu
+        </a>
+    </nav>
 
-  <label for="date-picker">Select Date</label>
-  <input type="date" id="date-picker">
-
-  <button onclick="sendDateForCar()">Send Date</button>
-</div>
-
-<div id="status-list">
-  <h2>Cars Status & Availability</h2>
-  <ul id="cars-status-ul"></ul>
-</div>
-<br>
-<div class="param-section">
-  <h2>Send Command</h2>
-  <label for="car-command-select">Select Car</label>
-  <select id="car-command-select">
-    <option value="">-- Select Car --</option>
-  </select>
-
-  <label for="car-command-option">Select Option</label>
-  <select id="car-command-option">
-    <option value="">-- Select Option --</option>
-    <option value="lock">Lock</option>
-    <option value="unlock">Unlock</option>
-  </select>
-
-  <button onclick="sendCarCommand()">Send Command</button>
-  <br>
-  <br>
-  <br>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAIlkvwyaF6FPPbXBJDqHwuTS5S3QKG3l8",
-  authDomain: "xoxo-store.firebaseapp.com",
-  databaseURL: "https://xoxo-store-default-rtdb.firebaseio.com",
-  projectId: "xoxo-store",
-  storageBucket: "xoxo-store.firebasestorage.app",
-  messagingSenderId: "667290233046",
-  appId: "1:667290233046:web:dbbc9130ff38b0900f8177",
-  measurementId: "G-XMJVCK8KMD"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const ROOT_PATH = "/cars";
-
-const carSelect = document.getElementById("car-select");
-const carCommandSelect = document.getElementById("car-command-select");
-const statusUl = document.getElementById("cars-status-ul");
-
-function loadCarsList() {
-  db.ref(ROOT_PATH).once("value").then(snapshot => {
-    const cars = snapshot.val();
-    if (!cars) return;
-
-    carSelect.innerHTML = '<option value="">-- Select Car --</option>';
-    carCommandSelect.innerHTML = '<option value="">-- Select Car --</option>';
-    statusUl.innerHTML = '';
-
-    for (let carId in cars) {
-      const car = cars[carId];
-
-      [carSelect, carCommandSelect].forEach(select => {
-        const option = document.createElement("option");
-        option.value = carId;
-        option.textContent = carId;
-        select.appendChild(option);
-      });
-
-      const li = document.createElement("li");
-      li.id = `status-${carId}`;
-      const status = car.status || "Unknown";
-      const availableOn = car.AvailableOn || "N/A";
-      li.innerHTML = `<span>${carId}</span><span>${status}</span><span>${availableOn}</span>`;
-      statusUl.appendChild(li);
-
-      checkExpired(li, availableOn);
-    }
-  });
-}
-
-function verifyAdminCode(callback) {
-  const code = prompt("Enter Admin Code:");
-  if (!code) return alert("Admin code is required!");
-
-  db.ref(`AdminCode/cars`).once("value").then(snapshot => {
-    const storedCode = snapshot.val();
-    if (code === storedCode) {
-      callback();
-    } else {
-      alert("Invalid Admin Code!");
-    }
-  }).catch(err => alert("Error verifying code: " + err));
-}
-
-function sendDateForCar() {
-  const carId = carSelect.value;
-  const date = document.getElementById("date-picker").value;
-  if (!carId) return alert("Please select a car!");
-  if (!date) return alert("Please select a date!");
-
-  verifyAdminCode(() => {
-    db.ref(`${ROOT_PATH}/${carId}/AvailableOn`).set(date)
-      .then(() => alert(`Date ${date} sent for ${carId}`))
-      .catch(err => alert("Error sending date: " + err));
-  });
-}
-
-function sendCarCommand() {
-  const carId = carCommandSelect.value;
-  const option = document.getElementById("car-command-option").value;
-  if (!carId) return alert("Please select a car!");
-  if (!option) return alert("Please select an option!");
-
-  verifyAdminCode(() => {
-    db.ref(`${ROOT_PATH}/${carId}/req`).set(option)
-      .then(() => alert(`Command "${option}" sent for ${carId}`))
-      .catch(err => alert("Error sending command: " + err));
-  });
-}
-
-function checkExpired(liElement, availableOn) {
-  liElement.classList.remove("expired");
-  if (!availableOn || availableOn === "N/A") return;
-
-  const today = new Date();
-  const carDate = new Date(availableOn + "T23:59:59");
-  if (carDate < today) {
-    liElement.classList.add("expired");
-  }
-}
-
-db.ref(ROOT_PATH).on("child_changed", snapshot => {
-  const carId = snapshot.key;
-  const car = snapshot.val();
-  const li = document.getElementById(`status-${carId}`);
-  if (li) {
-    const status = car.status || "Unknown";
-    const availableOn = car.AvailableOn || "N/A";
-    li.querySelector("span:nth-child(2)").textContent = status;
-    li.querySelector("span:nth-child(3)").textContent = availableOn;
-
-    checkExpired(li, availableOn);
-  }
-});
-
-loadCarsList();
-</script>
-<!-- Floating Button -->
-<button id="tracking-btn">Go to Tracking</button>
-
-<style>
-  #tracking-btn {
-    position: fixed;
-    bottom: 20px;       /* distance from bottom */
-    left: 50%;          /* center horizontally */
-    transform: translateX(-50%);
-    width: 15%;
-    background-color: #1976D2;
-    color: #fff;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    transition: background 0.3s, transform 0.2s;
-    z-index: 1000;
-  }
-
-  #tracking-btn:hover {
-    background-color: #115293;
-    transform: translateX(-50%) translateY(-2px);
-  }
-</style>
-
-<script>
-  document.getElementById("tracking-btn").onclick = function() {
-    window.location.href = "Tracking.html";
-  }
-</script>
-
-
-</body>
-</html>
+    <main class="container">
+        <div class="pricing-wrapper">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Category</th>
+                            <th>Estimated Duration</th>
+                            <th>Starting Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- SERVICE 1 -->
+                        <tr>
+                            <td>
+                                <div class="service-name">
+                                    <span class="service-icon">🛢️</span>
+                                    <span>Synthetic Oil Change</span>
+                                </div>
+                                <div class="service-desc">Includes premium synthetic oil fluid swap, new filter replacement, and full vital fluid top-off.</div>
+                            </td>
+                            <td><span class="estimated-time">30 - 45 Mins</span></td>
+                            <td><span class="price-tag">$69.99</span></td>
+                        </tr>
+                        <!-- SERVICE 2 -->
+                        <tr>
+                            <td>
+                                <div class="service-name">
+                                    <span class="service-icon">🛑</span>
+                                    <span>Brake Pad Replacement</span>
+                                </div>
+                                <div class="service-desc">Front or rear axle brake pad tracking installation. Component inspection included.</div>
+                            </td>
+                            <td><span class="estimated-time">1 - 1.5 Hours</span></td>
+                            <td><span class="price-tag">$149.99</span></td>
+                        </tr>
+                        <!-- SERVICE 3 -->
+                        <tr>
+                            <td>
+                                <div class="service-name">
+                                    <span class="service-icon">💻</span>
+                                    <span>Computer Check Diagnostic</span>
+                                </div>
+                                <div class="service-desc">Full computer code scanner check engine light breakdown, sensor readings tracking, and mechanical test assessment.</div>
+                            </td>
+                            <td><span class="estimated-time">45 Mins</span></td>
+                            <td><span class="price-tag">$89.99</span></td>
+                        </tr>
+                        <!-- SERVICE 4 -->
+                        <tr>
+                            <td>
+                                <div class="service-name">
+                                    <span class="service-icon">🔋</span>
+                                    <span>Battery Diagnostics & Installation</span>
+                                </div>
+                                <div class="service-desc">Voltage load testing verification and replacement installation of a premium long-life backup battery unit.</div>
+                            </td>
