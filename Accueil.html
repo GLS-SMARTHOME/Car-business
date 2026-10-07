@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to DUMAK</title>
+    <!-- Integrated Font Awesome Library for Icons -->
+    <link rel="stylesheet" href="https://cloudflare.com">
+    
     <style>
         :root {
             --primary-color: #1a252f;
@@ -123,24 +126,32 @@
             margin-left: auto;
             margin-right: auto;
         }
-        /* WhatsApp Floating */
-    .whatsapp-float {
-      position: fixed;
-      bottom: 70px;
-      right: 20px;
-      background-color: #25D366;
-      color: white;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-    .whatsapp-float:hover { background-color: #20b358; }
+
+        /* WhatsApp Floating Panel Styles */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background-color: #25D366;
+            color: white;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 999;
+            text-decoration: none;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        
+        .whatsapp-float:hover { 
+            background-color: #20b358; 
+            transform: scale(1.05);
+            color: white;
+        }
 
         .card-rental .btn { background-color: #3498db; }
         .card-buy .btn { background-color: #2ecc71; }
@@ -163,7 +174,7 @@
 <body>
 
     <header class="header">
-        <h2>DUMAK BUSINESS LLC </h2>
+        <h1>DUMAK BUSINESS LLC</h1>
         <p>Please choose the service you require below</p>
     </header>
 
@@ -177,7 +188,8 @@
                     <h2>Car Rental</h2>
                     <p>Need a temporary ride? Choose from our diverse fleet of well-maintained vehicles</p>
                 </div>
-<a href="/Car-business/ForRent" class="btn">Rent a Car</a>            </div>
+                <a href="/Car-business/ForRent" class="btn">Rent a Car</a>
+            </div>
 
             <!-- SERVICE 2: BUY A CAR -->
             <div class="service-card card-buy">
@@ -186,7 +198,7 @@
                     <h2>Buy a Car</h2>
                     <p>Explore our inventory of pre-owned vehicles to fit your budget.</p>
                 </div>
-<a href="/Car-business/ForSale" class="btn">Browse Catalog</a>
+                <a href="/Car-business/ForSale" class="btn">Browse Catalog</a>
             </div>
 
             <!-- SERVICE 3: MECHANIC SHOP -->
@@ -194,17 +206,19 @@
                 <div class="card-icon">🔧</div>
                 <div class="card-content">
                     <h2>Mechanic Shop</h2>
-                    <p>Experiencing vehicle trouble? Trust our technician team for routine maintenance, swift diagnostics, and  auto repairs.</p>
+                    <p>Experiencing vehicle trouble? Trust our technician team for routine maintenance, swift diagnostics, and auto repairs.</p>
                 </div>
-<a href="/Car-business/Mechanic" class="btn">Book Repair</a>
+                <a href="/Car-business/Mechanic" class="btn">Book Repair</a>
             </div>
 
         </section>
     </main>
-<!-- WhatsApp -->
-  <a class="whatsapp-float" href="https://wa.me/3232020551" target="_blank">
-    <i class="fab fa-whatsapp"></i>
-  </a>
+
+    <!-- WhatsApp Floating Action Trigger Element -->
+    <a class="whatsapp-float" href="https://wa.me/3232020551" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
     <footer class="footer">
         <p>&copy; 2026 DUMAK. All Rights Reserved.</p>
     </footer>
